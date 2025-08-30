@@ -13,9 +13,8 @@ def create_driver():
     options.add_argument(f"--user-data-dir={temp_dir}")
 
     return webdriver.Chrome(options=options)
-
 def test_homepage_title():
     driver = create_driver()
-    driver.get("http://localhost:8080")   # change URL to your site
-    assert "Expected Title" in driver.title
+    driver.get("http://localhost:8080")   # adjust if different
+    assert "Jenkins" in driver.title      # ✅ match the real title
     driver.quit()
