@@ -1,30 +1,63 @@
 pipeline {
     agent any
+
+    environment {
+        IMAGE_NAME = "woodzone-website"
+        CONTAINER_NAME = "woodzone-website"
+    }
+
     stages {
         stage('Checkout') {
             steps {
                 git 'https://github.com/jafar90147677/WoodZone2-website.github.io.git'
             }
         }
-        stage('Setup Python') {
+
+        stage('Run Selenium Tests') {
             steps {
                 sh '''
+                    # Setup Python virtual env
                     python3 -m venv venv
                     . venv/bin/activate
+
                     pip install --upgrade pip
                     pip install pytest selenium
+
+                    # Start simple HTTP server in background
+                    python3 -m http.server 8000 &
+                    SERVER_PID=$!
+
+                    # Run Selenium tests
+                    pytest -v test_homepage.py || EXIT_CODE=$?
+
+                    # Kill server after tests
+                    kill $SERVER_PID || true
+
+                    # Exit if pytest failed
+                    if [ ! -z "$EXIT_CODE" ]; then
+                        exit $EXIT_CODE
+                    fi
                 '''
             }
         }
-        stage('Run Server + Tests') {
+
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                    . venv/bin/activate
-                    python3 -m http.server 8000 &
-                    SERVER_PID=$!
-                    sleep 3   # wait a bit for server
-                    pytest -v test_homepage.py
-                    kill $SERVER_PID
+                    docker build -t $IMAGE_NAME .
+                '''
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                sh '''
+                    # Stop old container if running
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+
+                    # Run new container
+                    docker run -d --name $CONTAINER_NAME -p 8000:8000 $IMAGE_NAME
                 '''
             }
         }
