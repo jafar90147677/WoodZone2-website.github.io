@@ -26,12 +26,12 @@ from selenium.webdriver.edge.options import Options
 @pytest.fixture
 def driver():
     edge_options = Options()
-    # Run headless if Jenkins has no display:
+    # Run headless in Jenkins (uncomment if no GUI available):
     # edge_options.add_argument("--headless")
     # edge_options.add_argument("--disable-gpu")
 
-    # Use raw string for Windows path
-    service = Service(r"C:\WebDrivers\edgedriver_win64\msedgedriver.exe")
+    # Path to msedgedriver.exe
+    service = Service(r"C:\WebDrivers\msedgedriver.exe")
 
     driver = webdriver.Edge(service=service, options=edge_options)
     yield driver
@@ -41,4 +41,5 @@ def test_homepage_title(driver):
     driver.get("http://localhost:8080")
     print("Page Title:", driver.title)
     assert "Simple Product" in driver.title
+
 
