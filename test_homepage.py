@@ -18,22 +18,20 @@
 #     driver.get("http://localhost:8080")   # adjust if different
 #     assert "Jenkins" in driver.title      # ✅ match the real title
 #     driver.quit()
+
 import pytest
 from selenium import webdriver
-from selenium.webdriver.edge.service import Service
 from selenium.webdriver.edge.options import Options
 
 @pytest.fixture
 def driver():
     edge_options = Options()
-    # Run headless in Jenkins (uncomment if no GUI available):
+    # Run headless in Jenkins if no display available:
     # edge_options.add_argument("--headless")
     # edge_options.add_argument("--disable-gpu")
 
-    # Path to msedgedriver.exe
-    service = Service(r"C:\WebDrivers\msedgedriver.exe")
-
-    driver = webdriver.Edge(service=service, options=edge_options)
+    # No need for Service() if driver is in PATH
+    driver = webdriver.Edge(options=edge_options)
     yield driver
     driver.quit()
 
@@ -41,5 +39,6 @@ def test_homepage_title(driver):
     driver.get("http://localhost:8080")
     print("Page Title:", driver.title)
     assert "Simple Product" in driver.title
+
 
 
