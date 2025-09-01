@@ -27,12 +27,12 @@ from selenium.webdriver.edge.options import Options
 def driver():
     # Set Edge options
     edge_options = Options()
-    # Run headless in Jenkins (no browser window):
+    # Run headless in Jenkins (uncomment if no GUI available):
     # edge_options.add_argument("--headless")
     # edge_options.add_argument("--disable-gpu")
 
-    # Path to msedgedriver.exe
-    service = Service("C:/WebDrivers/msedgedriver.exe")
+    # Correct path to msedgedriver.exe
+    service = Service("C:/WebDrivers/edgedriver_win64/msedgedriver.exe")
 
     # Start Edge browser
     driver = webdriver.Edge(service=service, options=edge_options)
