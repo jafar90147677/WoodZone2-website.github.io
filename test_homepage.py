@@ -1,8 +1,10 @@
 import os
 import time
 import tempfile
+import uuid
 from selenium import webdriver
 from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
 
 
 def running_in_ci() -> bool:
@@ -10,22 +12,28 @@ def running_in_ci() -> bool:
 
 
 def create_driver():
-    edge_options = EdgeOptions()
+    # Use Chrome in CI/Jenkins (chromium + chromium-driver available)
+    # Use Edge locally (built into Windows)
+    use_chrome = running_in_ci()
+    
+    if use_chrome:
+        options = ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+    else:
+        options = EdgeOptions()
 
-    if running_in_ci():
-        # Headless for Jenkins/CI
-        edge_options.add_argument("--headless=new")
-        edge_options.add_argument("--disable-gpu")
+    # Highly unique profile directory to avoid collisions
+    unique_suffix = f"{os.getpid()}_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+    temp_dir = tempfile.mkdtemp(prefix=f"selenium_profile_{unique_suffix}_")
+    options.add_argument(f"--user-data-dir={temp_dir}")
 
-    # Unique profile per run
-    temp_dir = tempfile.mkdtemp()
-    edge_options.add_argument(f"--user-data-dir={temp_dir}")
+    # Reduce noisy Chromium logs
+    options.add_argument("--log-level=3")
 
-    # Reduce noisy Chromium logs locally
-    edge_options.add_argument("--log-level=3")
-
-    # Works if msedgedriver is on PATH
-    return webdriver.Edge(options=edge_options)
+    return webdriver.Chrome(options=options) if use_chrome else webdriver.Edge(options=options)
 
 
 def test_homepage_title():
@@ -94,10 +102,6 @@ def test_homepage_title():
 #     driver.get("http://localhost:8080")
 #     print("Page Title:", driver.title)
 #     assert "Simple Product" in driver.title
-
-
-
-
 
 
 
